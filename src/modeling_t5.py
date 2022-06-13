@@ -8,6 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from numpy import mod
 from torch.nn import CrossEntropyLoss
+from src.SelfAttentionBasedTableEncoder import CollapsedMetricsTableEncoder
+from transformer import T5Config
 from transformers.modeling_outputs import (
     BaseModelOutput, BaseModelOutputWithPastAndCrossAttentions, ModelOutput)
 from transformers.models.t5.modeling_t5 import (T5Attention, T5Block,
@@ -993,3 +995,101 @@ class TableNarrationLMOutput(ModelOutput):
     table_encoder_last_hidden_state: Optional[torch.FloatTensor] = None
     table_encoder_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
     table_encoder_attentions: Optional[Tuple[torch.FloatTensor]] = None
+
+
+class T5NarrationModel(nn.Module):
+    def buildBaseline(self,):
+
+        self.generator = T5ForConditionalGeneration.from_pretrained(
+            self.modelbase, config=self.t5config)
+        self.generator.resize_token_embeddings(self.vocab_size)
+
+    def buildFusionModels(self,):
+        # print(self.t5config.modeltype)
+        self.generator = DataNarration.from_pretrained(
+            self.modelbase, config=self.t5config)
+        # Build the Entries Encoder
+        self.aux_encoder = CollapsedMetricsTableEncoder(
+            self.t5config, self.generator.encoder.embed_tokens)
+
+        # Resize the embedding layer
+        self.generator.extend_vocab(self.vocab_size)
+
+    def performAuxEncoding(self, metric_data, value_data, rate_data):
+        table_rep = self.aux_encoder(
+            metric_data, value_data, rate_data)
+        return table_rep
+
+    def FusionModelsTraining(self, batch):
+        device = self.device
+        met, rate, val = batch['metrics_seq'].to(
+            device), batch['rates'].to(device), batch['values'].to(device)
+        clb, di = batch['class_labels'].to(
+            device), batch['data_info'].to(device)
+        met_att = batch['metrics_attention'].to(device)
+        rate_att = batch['rate_attention'].to(device)
+        val_att = batch['value_attention'].to(device)
+
+        preamble_tokens = batch['preamble_tokens'].to(device)
+        preamble_attention_mask = batch['preamble_attention_mask'].to(device)
+        labels = batch['labels'].to(device)
+
+        table_rep = self.performAuxEncoding([met.detach().clone(), met_att.detach().clone()],
+                                            [val.detach().clone(),
+                                             val_att.detach().clone()],
+                                            [rate.detach().clone(), rate_att.detach().clone()])
+
+        decoder_attention_mask = batch['labels_attention_mask'].to(device)
+
+        outputs = self.generator(input_ids=preamble_tokens,
+                                 attention_mask=preamble_attention_mask,
+                                 table_inputs=table_rep,
+                                 table_attention_mask=None,
+                                 labels=labels,
+                                 decoder_attention_mask=decoder_attention_mask,
+                                 reduce_loss=True,
+                                 )
+        return outputs
+    
+    def baselineTraining(self, batch):
+        device = self.device
+        preamble_tokens = batch['preamble_tokens'].to(device)
+        preamble_attention_mask = batch['preamble_attention_mask'].to(device)
+        labels = batch['labels'].to(device)
+
+        decoder_attention_mask = batch['labels_attention_mask'].to(device)
+        return self.generator(input_ids=preamble_tokens,
+                                            attention_mask=preamble_attention_mask,
+                                            labels=labels,
+                                            decoder_attention_mask=decoder_attention_mask,
+                                            reduce_loss=True,
+
+                                            )
+
+    def __init__(self, vocab_size, model_type, modelbase='t5-base', share_mpu_sa=False, device=torch.device(
+            'cuda') if torch.cuda.is_available() else torch.device('cpu')):
+
+
+        self.modelbase = modelbase
+        self.vocab_size = vocab_size
+        self.share_mpu_sa = share_mpu_sa
+        self.device = device
+        self.t5config = copy.deepcopy(T5Config.from_pretrained(
+            self.modelbase,
+            output_hidden_states=False))
+
+        super(T5NarrationModel, self).__init__()
+        
+        self.t5config.share_mpu_sa = self.share_mpu_sa
+        self.model_type= model_type
+        if self.model_type in ['baseline', 'base', ]:
+            self.t5config.modeltype = model_type
+            self.buildBaseline()
+        else:
+            self.t5config.modeltype = model_type
+            self.buildFusionModels()
+
+    def forward(self, batch):
+        if self.model_type not in ['base','baseline']: 
+            return self.FusionModelsTraining(batch)
+        return self.baselineTraining(batch)
