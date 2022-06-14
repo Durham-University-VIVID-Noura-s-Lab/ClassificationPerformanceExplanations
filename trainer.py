@@ -1,14 +1,9 @@
 import argparse
-from ast import arg
 import json
 import os
-import pickle as pk
-import time
-from re import S
 
 from pytorch_lightning import seed_everything
 from torch.nn import functional as F
-from src.data_utils import processInputTableAndNarrations, identicals
 from src.datasethandler import DataSetLoader, NarrationDataSet, train_data_original_path, train_data_permutated_path, test_data_path
 #from composer import *
 from src.trainer_utils import (CustomTrainerFusion, get_model,
@@ -42,6 +37,7 @@ parser.add_argument('-use_raw', '--use_raw', action="store_true")
 parser.add_argument('-sbs', '--sample_bs', action="store_true")
 parser.add_argument('--output_dir', '-output_dir', type=str, required=True)
 parser.add_argument('--logging_steps', '-logging_steps', default=500,)
+parser.add_argument('--report_to', '-report_to', default=None, type=str)
 parser.add_argument('--per_device_eval_batch_size',
                     '-eval_bs', type=int, default=4,)
 parser.add_argument('-org', '--use_original_data', action="store_true",
@@ -64,8 +60,8 @@ train_arguments = {k: v for k, v in params_dict.items() if k not in ['use_raw', 
 pre_trained_model_name = args.modelbase.split(
     '/')[1] if 'bart' in args.modelbase else args.modelbase
 args.output_path = args.output_dir
-output_path = 'TrainedNarrators/' + args.modeltype + \
-    args.output_path+'/'+pre_trained_model_name+'/'
+output_path = args.output_path+'/trainednarrators/' + \
+    args.modeltype + '/'+pre_trained_model_name+'/'
 
 # When the training is performed with different random seeds
 if args.seed_check:
@@ -74,14 +70,16 @@ try:
     os.makedirs(output_path)
 except:
     pass
+
 print(f'The trained will be saved @: {output_path}')
+train_arguments['output_dir'] = output_path
 
 # Save the arguments for later (when inference is performed)
 
 
 # Load the dataset based on the value of args.use_original_data
-dataset = DataSetLoader() if not args.use_original_data else DataSetLoader(
-    train_data_path=train_data_original_path)
+dataset = DataSetLoader(train_data_path=train_data_permutated_path, test_data_path=test_data_path) if not args.use_original_data else DataSetLoader(
+    train_data_path=train_data_original_path, test_data_path=test_data_path)
 
 
 # Process the data and set up the tokenizer
@@ -111,7 +109,6 @@ print('{:>5,} validation samples'.format(val_size))
 training_arguments = getTrainingArguments(train_arguments)
 
 
-
 # Setup the narration model
 getModel = get_model(narrationdataset, model_type=args.modeltype)
 
@@ -131,13 +128,15 @@ trainer.save_state()
 
 results = trainer.evaluate()
 
-# get the best checkpoint 
+# get the best checkpoint
 best_check_point = trainer.state.best_model_checkpoint
 
-# 
+
+
+#
 params_dict['best_check_point'] = best_check_point
-json.dump(params_dict,open(f'{output_path}/parameters.json'))
+params_dict['output_path'] = output_path
+json.dump(params_dict, open(f'{output_path}/parameters.json', 'w'))
 
-print(f'Model Training Complete. Best model is at: {params_dict["best_check_point"]}')
-
-
+print(
+    f'Model Training Complete. Best model is at: {params_dict["best_check_point"]}')
