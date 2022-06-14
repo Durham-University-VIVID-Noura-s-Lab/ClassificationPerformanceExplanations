@@ -1,5 +1,6 @@
 import torch
 from src.modeling_bart import BartNarrationModel
+from src.modeling_t5 import T5NarrationModel
 from transformers import TrainingArguments, Trainer, EarlyStoppingCallback
 
 class CustomTrainerFusion(Trainer):

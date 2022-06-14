@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from numpy import mod
 from torch.nn import CrossEntropyLoss
 from src.SelfAttentionBasedTableEncoder import CollapsedMetricsTableEncoder
-from transformer import T5Config
+from transformers import T5Config
 from transformers.modeling_outputs import (
     BaseModelOutput, BaseModelOutputWithPastAndCrossAttentions, ModelOutput)
 from transformers.models.t5.modeling_t5 import (T5Attention, T5Block,

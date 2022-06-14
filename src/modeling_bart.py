@@ -7,15 +7,15 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 from torch.nn import functional as F
-from src.SelfAttentionBasedTableEncoder import CollapsedMetricsTableEncoderBart
-from transformers import BartConfig, BartPretrainedModel, BartTokenizer
+from transformers import BartConfig, BartPretrainedModel, BartForConditionalGeneration
 from transformers.models.bart.modeling_bart import (
-    ACT2FN, BartAttention, BartDecoder, BartEncoder, BartEncoderLayer,
-    BartLearnedPositionalEmbedding, BartModel, BaseModelOutput,
+    ACT2FN, BartAttention, BartDecoder, BartEncoderLayer,
+    BartLearnedPositionalEmbedding, BaseModelOutput,
     Seq2SeqLMOutput, Seq2SeqModelOutput, shift_tokens_right)
 
 from model_utils import RelativeGlobalAttention
-from torch.nn import functional as F
+from src.SelfAttentionBasedTableEncoder import CollapsedMetricsTableEncoderBart
+
 
 class GatedControl(nn.Module):
     def __init__(self, config):
@@ -937,15 +937,16 @@ class BartNarrationModel(nn.Module):
         super(BartNarrationModel, self).__init__(
         )
         
-        self.generator = DataNarrationBart.from_pretrained(
-            self.modelbase, config=self.bartconfig,)
+        
         
         if self.model_type not in ['base','baseline']:
+            self.generator = DataNarrationBart.from_pretrained(self.modelbase, config=self.bartconfig,)
             # Build the Entries Encoder
             self.aux_encoder = CollapsedMetricsTableEncoderBart(
                 self.bartconfig, self.generator.get_encoder().embed_tokens)
         else:
             self.aux_encoder = None
+            self.generator = BartForConditionalGeneration.from_pretrained(self.modelbase, config=self.bartconfig,)
 
         # Resize the embedding layer
         self.generator.resize_token_embeddings(self.vocab_size)
