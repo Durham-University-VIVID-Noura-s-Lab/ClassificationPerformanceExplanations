@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 notebooks/*
 wandb/*
+old_code/*
 # C extensions
 *.so
 

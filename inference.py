@@ -58,9 +58,8 @@ narrationdataset = NarrationDataSet(params_dict['modelbase'],
                                     lower_narrations=True,
                                     process_target=True)
 
-narrationdataset.fit(dataset_raw.train_data, dataset_raw.test_data)
-train_dataset = narrationdataset.train_dataset
-test_dataset = narrationdataset.test_dataset
+narrationdataset.dataset_fit(dataset_raw.test_data)
+test_dataset = narrationdataset.base_dataset
 tokenizer = tokenizer_ = narrationdataset.tokenizer_
 
 

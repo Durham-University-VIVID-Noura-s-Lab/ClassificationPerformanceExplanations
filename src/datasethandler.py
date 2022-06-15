@@ -1,4 +1,5 @@
 import json
+import random
 
 from attr import dataclass
 import torch
@@ -202,6 +203,16 @@ class NarrationDataSet:
         self.max_rate_toks = max_rate_toks
         self.lower_narrations = lower_narrations
         self.process_target = process_target
+    
+    def dataset_fit(self,dataset):
+        self.base_dataset  = RDFDataSetForTableStructured(self.tokenizer_,
+                                                         dataset,
+                                                         self.modelbase, max_preamble_len=self.max_preamble_len,
+                                                         max_len_trg=self.max_len_trg,
+                                                         max_rate_toks=self.max_rate_toks,
+                                                         lower_narrations=self.lower_narrations,
+                                                         process_target=self.process_target,
+                                                         use_raw=False)
 
     def fit(self, trainset, testset):
         self.train_dataset = RDFDataSetForTableStructured(self.tokenizer_,
@@ -213,7 +224,7 @@ class NarrationDataSet:
                                                           process_target=self.process_target,
                                                           use_raw=False)
 
-        self.test_dataset = RDFDataSetForTableStructured(self.tokenizer_,
+        self.base_dataset  = self.test_dataset = RDFDataSetForTableStructured(self.tokenizer_,
                                                          testset,
                                                          self.modelbase, max_preamble_len=self.max_preamble_len,
                                                          max_len_trg=self.max_len_trg,
@@ -223,7 +234,7 @@ class NarrationDataSet:
                                                          use_raw=False)
 
     def transform(self, pack):
-        return self.test_dataset.processTableInfo(pack)
+        return self.base_dataset.processTableInfo(pack)
 
 
 
@@ -265,7 +276,9 @@ class ClassificationReportPreprocessor(object):
                 metric_string += ' && ' + \
                     f'{m.lower()} | also_known_as | {identicals[metric_name]}'
             report.append(metric_string)
-
+        
+        # Get different narrative preamble
+        random.shuffle(report)
         report = ' && '.join(report)+' '
 
         metric_maps.update(self.class_maps)
