@@ -1,6 +1,10 @@
 import copy
+import functools
+import re
 import numpy as np
 from pytorch_lightning import seed_everything
+from src.datasethandler import ClassificationReportPreprocessor
+
 
 # class for handling the performance narration
 
@@ -9,9 +13,10 @@ class PerformanceNarrator:
     def __init__(self, model,
                  experiments_dataset,
                  device,
+                 classificationReportProcessor: ClassificationReportPreprocessor= None,
                  max_iter=5,
                  sampling=True,
-                  verbose=False) -> None:
+                 verbose=False) -> None:
         self.model = model.to(device)
         self.experiments_dataset = experiments_dataset
         self.vectorizer = vectorizer = lambda x: experiments_dataset.transform(
@@ -20,11 +25,58 @@ class PerformanceNarrator:
         self.sampling = sampling
         self.verbose = verbose
         self.device = device
+        self.classificationReportProcessor = classificationReportProcessor
+
+    def multipleNarrationGeneration(self, prediction_summaries, seed,  max_length=190,
+                                    length_penalty=8.6, beam_size=10,
+                                    repetition_penalty=1.5,
+                                    return_top_beams=4):
+        narrations = []
+        for prediction_summary in prediction_summaries:
+            narratives = self.singleNarrationGeneration(prediction_summary, seed,  max_length,
+                                                        length_penalty, beam_size,
+                                                        repetition_penalty,
+                                                        return_top_beams)
+            narrations.append(narratives)
+        return narrations
+
+    def singleNarrationGeneration(self, prediction_summary, seed,  max_length=190,
+                                  length_penalty=8.6, beam_size=10,
+                                  repetition_penalty=1.5,
+                                  return_top_beams=4):
+        """
+        Generates the Performance Narratives by first preprocessing the performance summary report then calling the 
+        __generateNarration(args) function
+        """
+        if self.classificationReportProcessor:
+            example, placeholder_map = self.classificationReportProcessor(
+            prediction_summary)
+            narrative = self.generateNarration(example, seed,  max_length,
+                                                length_penalty, beam_size,
+                                                repetition_penalty,
+                                                return_top_beams)
+            narrative = [functools.reduce(lambda a, kv: a.replace(*kv), placeholder_map.items(),
+                                        re.sub('\s+', ' ', ss.strip().replace('\n', ' '))) for ss in [narrative]]
+        else:
+            narrative = self.generateNarration(prediction_summary, seed,  max_length,
+                                                length_penalty, beam_size,
+                                                repetition_penalty,
+                                                return_top_beams)
+
+        return narrative[0]
 
     def generateNarration(self, example, seed,  max_length=190,
-                          length_penalty=8.6, beam_size=10,
-                          repetition_penalty=1.5,
-                          return_top_beams=4):
+                            length_penalty=8.6, beam_size=10,
+                            repetition_penalty=1.5,
+                            return_top_beams=4):
+        """
+        This function is called to generate the narrative from a given preprocessed  performance summary. 
+        We assume that the performance summary has been preprocessed. 
+        """
+        self.model.generator.eval()
+        if self.model.aux_encoder is not None:
+            self.model.aux_encoder.eval()
+        
         seed_everything(seed)
 
         device = self.device
@@ -87,3 +139,8 @@ class PerformanceNarrator:
                                                                      clean_up_tokenization_spaces=True) for s in sample_outputs]
 
         return sentence_output
+
+
+class InferenceRoutine(object):
+    def __init__(self) -> None:
+        pass

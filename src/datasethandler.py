@@ -3,7 +3,7 @@ import json
 from attr import dataclass
 import torch
 
-from data_utils import cleanRatingPreamble, processInputTableAndNarrations, identicals
+from data_utils import cleanRatingPreamble, getClassLabels, processInputTableAndNarrations, identicals
 from src.model_utils import setupTokenizer
 
 # Change these to match the location of your dataset
@@ -224,3 +224,76 @@ class NarrationDataSet:
 
     def transform(self, pack):
         return self.test_dataset.processTableInfo(pack)
+
+
+
+
+class ClassificationReportPreprocessor(object):
+    def __call__(self, prediction_summary):
+        '''
+        prediction_summary is a dictionary with the metric names as the keys and the list [score, rate] as the values 
+        '''
+        preamble = "<MetricsInfo> "
+
+        # Replace the F{beta}-score metric name with a
+        fnames = {'F1-score': 'F1score', 'F1-Score': 'F1score',
+                  'F2-score': 'F2score', 'F2-Score': 'F2score'}
+        report = []
+        m_list = []
+        v_list = []
+        r_list = []
+        metric_maps = {}
+        for metric_name, score_summary in prediction_summary.items():
+            m = metric_name
+            mx = m.lower().replace('-score', '').strip()
+            mx = m.lower().replace(' score', '').strip()
+            mx = m.lower().replace('score', '').strip()
+
+            m = fnames.get(m,m)
+            metric_maps[m.lower()] = metric_name
+
+            score = score_summary[0]
+            rate = score_summary[-1].upper()
+            
+            if '%' not in score:
+                score = score+'%'
+            metric_string = f'{m.lower()} | VALUE_{rate} | {score} '
+            m_list.append(m.replace('-', '').replace('_', '').lower())
+            v_list.append(score)
+            r_list.append(rate)
+            if mx.lower() in identicals.keys():
+                metric_string += ' && ' + \
+                    f'{m.lower()} | also_known_as | {identicals[metric_name]}'
+            report.append(metric_string)
+
+        report = ' && '.join(report)+' '
+
+        metric_maps.update(self.class_maps)
+        output = {'preamble': preamble + report + self.task_section,
+            'metrics': m_list,
+                  'values': v_list,
+                  'rates': r_list,
+                  
+                  **self.task_dictionary,
+                  'narration':"",
+
+
+                  }
+
+        return output,metric_maps
+
+    def __init__(self, classes, is_balance):
+        super().__init__()
+        assert len(classes) > 1, "The number of classes should be greater than 1"
+        self.classes = classes
+
+        self.class_labels_placeholders = getClassLabels(len(self.classes))
+        self.class_maps = {p: c for p, c in zip(
+            self.class_labels_placeholders, classes)}
+        classes_string = ', '.join(
+            self.class_labels_placeholders[:-1])+' and '+self.class_labels_placeholders[-1]
+        is_balance = "is_balanced" if is_balance else "is_imbalanced"
+        self.task_section = f"<|section-sep|> <TaskDec> ml_task | data_dist | {is_balance} && ml_task | class_labels | {classes_string}  <|section-sep|> <|table2text|> "
+
+        self.task_dictionary = {'dataset_attribute': [is_balance],
+                                'classes': self.class_labels_placeholders}
