@@ -23,10 +23,10 @@ parser = argparse.ArgumentParser(
     description='Arguments for Performance Narration Models.')
 parser.add_argument('--model_base_dir', '-model_base_dir',
                     type=str, required=True)
-            
-#parser.add_argument('-report', '--report', type=json.loads, help="""
+
+# parser.add_argument('-report', '--report', type=json.loads, help="""
 # Expect the report to be of the format {"classes": [class_names],"is_balance": 0 (for imbalance dataset) or 1 ()}
-#""")
+# """)
 
 args = parser.parse_args()
 # Build the Dictionary
@@ -63,8 +63,8 @@ test_dataset = narrationdataset.base_dataset
 tokenizer = tokenizer_ = narrationdataset.tokenizer_
 
 
-
-device = torch.device( 'cuda') if torch.cuda.is_available() else torch.device('cpu')
+device = torch.device(
+    'cuda') if torch.cuda.is_available() else torch.device('cpu')
 # Build model
 performance_narration_model = get_model(narrationdataset,
                                         model_type=params_dict['modeltype'])()
@@ -75,20 +75,25 @@ performance_narration_model.load_state_dict(state_dict)
 
 print('Model loaded')
 
-classifcation_report = ClassificationReportPreprocessor(['Low Quality','High Quality'],True)
+classifcation_report = ClassificationReportPreprocessor(
+    ['Low Quality', 'High Quality'], True)
 
-narrator = PerformanceNarrator(performance_narration_model,narrationdataset,device,classificationReportProcessor=None,sampling=False,verbose=False)
+narrator = PerformanceNarrator(performance_narration_model,
+                               narrationdataset, device,
+                               classificationReportProcessor=None,
+                               sampling=False,
+                               verbose=False)
 
 #prediction_report = {'F1-score':["20.56%","LOW"],'Accuracy':["40.16%","LOW"],'AUC':["70.16%","LOW"]}
-#print(classifcation_report(prediction_report))
-#print(narrator.singleNarrationGeneration(prediction_report,seed))
-#exit()
+# print(classifcation_report(prediction_report))
+# print(narrator.singleNarrationGeneration(prediction_report,seed))
+# exit()
 #example = dataset_raw.test_data[99]
 
 
 narratives = narrator.multipleNarrationGeneration(dataset_raw.test_data[:], seed,  max_length=190,
-                          length_penalty=8.6, beam_size=10,
-                          repetition_penalty= 1.5,
-                           return_top_beams=4)
+                                                  length_penalty=8.6, beam_size=10,
+                                                  repetition_penalty=1.5,
+                                                  return_top_beams=4)
 
 print(narratives)
