@@ -152,16 +152,20 @@ class RDFDataSetForTableStructured(torch.utils.data.Dataset):
             metrics_attention = torch.cat(
                 [metrics_attention, pads], dim=0).type(torch.IntTensor)
 
-            val_pad = torch.zeros((self.nb_metrics-nb_metrics, self.max_val_toks))
-            rate_pad = torch.zeros((self.nb_metrics-nb_metrics, self.max_rate_toks))
+            val_pad = torch.zeros(
+                (self.nb_metrics-nb_metrics, self.max_val_toks))
+            rate_pad = torch.zeros(
+                (self.nb_metrics-nb_metrics, self.max_rate_toks))
 
             values['input_ids'] = torch.cat(
                 [values['input_ids'], val_pad+self.pad_token_id], dim=0).type(torch.IntTensor)
-            rates['input_ids'] = torch.cat([rates['input_ids'], rate_pad + self.pad_token_id], dim=0).type(torch.IntTensor)
-            
+            rates['input_ids'] = torch.cat(
+                [rates['input_ids'], rate_pad + self.pad_token_id], dim=0).type(torch.IntTensor)
 
-            values['attention_mask'] = torch.cat([values['attention_mask'], val_pad], dim=0).type(torch.IntTensor)
-            rates['attention_mask'] = torch.cat([rates['attention_mask'], rate_pad], dim=0).type(torch.IntTensor)
+            values['attention_mask'] = torch.cat(
+                [values['attention_mask'], val_pad], dim=0).type(torch.IntTensor)
+            rates['attention_mask'] = torch.cat(
+                [rates['attention_mask'], rate_pad], dim=0).type(torch.IntTensor)
 
         preamble_encoding = self.preamble_tokenizer(data_preamble)
         preamble_tokens = preamble_encoding['input_ids']
@@ -203,9 +207,9 @@ class NarrationDataSet:
         self.max_rate_toks = max_rate_toks
         self.lower_narrations = lower_narrations
         self.process_target = process_target
-    
-    def dataset_fit(self,dataset):
-        self.base_dataset  = RDFDataSetForTableStructured(self.tokenizer_,
+
+    def dataset_fit(self, dataset):
+        self.base_dataset = RDFDataSetForTableStructured(self.tokenizer_,
                                                          dataset,
                                                          self.modelbase, max_preamble_len=self.max_preamble_len,
                                                          max_len_trg=self.max_len_trg,
@@ -224,19 +228,17 @@ class NarrationDataSet:
                                                           process_target=self.process_target,
                                                           use_raw=False)
 
-        self.base_dataset  = self.test_dataset = RDFDataSetForTableStructured(self.tokenizer_,
-                                                         testset,
-                                                         self.modelbase, max_preamble_len=self.max_preamble_len,
-                                                         max_len_trg=self.max_len_trg,
-                                                         max_rate_toks=self.max_rate_toks,
-                                                         lower_narrations=self.lower_narrations,
-                                                         process_target=self.process_target,
-                                                         use_raw=False)
+        self.base_dataset = self.test_dataset = RDFDataSetForTableStructured(self.tokenizer_,
+                                                                             testset,
+                                                                             self.modelbase, max_preamble_len=self.max_preamble_len,
+                                                                             max_len_trg=self.max_len_trg,
+                                                                             max_rate_toks=self.max_rate_toks,
+                                                                             lower_narrations=self.lower_narrations,
+                                                                             process_target=self.process_target,
+                                                                             use_raw=False)
 
     def transform(self, pack):
         return self.base_dataset.processTableInfo(pack)
-
-
 
 
 class ClassificationReportPreprocessor(object):
@@ -260,12 +262,12 @@ class ClassificationReportPreprocessor(object):
             mx = m.lower().replace(' score', '').strip()
             mx = m.lower().replace('score', '').strip()
 
-            m = fnames.get(m,m)
+            m = fnames.get(m, m)
             metric_maps[m.lower()] = metric_name
 
             score = score_summary[0]
             rate = score_summary[-1].upper()
-            
+
             if '%' not in score:
                 score = score+'%'
             metric_string = f'{m.lower()} | VALUE_{rate} | {score} '
@@ -276,24 +278,24 @@ class ClassificationReportPreprocessor(object):
                 metric_string += ' && ' + \
                     f'{m.lower()} | also_known_as | {identicals[metric_name]}'
             report.append(metric_string)
-        
+
         # Get different narrative preamble
         random.shuffle(report)
         report = ' && '.join(report)+' '
 
         metric_maps.update(self.class_maps)
         output = {'preamble': preamble + report + self.task_section,
-            'metrics': m_list,
+                  'metrics': m_list,
                   'values': v_list,
                   'rates': r_list,
-                  
+
                   **self.task_dictionary,
-                  'narration':"",
+                  'narration': "",
 
 
                   }
 
-        return output,metric_maps
+        return output, metric_maps
 
     def __init__(self, classes, is_balance):
         super().__init__()

@@ -54,7 +54,7 @@ class PerformanceNarrator:
             narrative = self.generateNarration(example, seed,  max_length,
                                                 length_penalty, beam_size,
                                                 repetition_penalty,
-                                                return_top_beams)
+                                                return_top_beams)[0]
             narrative = [functools.reduce(lambda a, kv: a.replace(*kv), placeholder_map.items(),
                                         re.sub('\s+', ' ', ss.strip().replace('\n', ' '))) for ss in [narrative]]
         else:

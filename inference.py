@@ -10,7 +10,7 @@ import torch
 
 from pytorch_lightning import seed_everything
 from torch.nn import functional as F
-from src.datasethandler import DataSetLoader, NarrationDataSet, train_data_original_path, train_data_permutated_path, test_data_path
+from src.datasethandler import ClassificationReportPreprocessor, DataSetLoader, NarrationDataSet, train_data_original_path, train_data_permutated_path, test_data_path
 from src.inferenceUtils import PerformanceNarrator
 #from composer import *
 from src.trainer_utils import (CustomTrainerFusion, get_model,
@@ -42,8 +42,8 @@ state_dict = json.load(open(args.model_base_dir+'/parameters.json'))
 
 best_check_point = state_dict['best_check_point']
 best_check_point_model = best_check_point + '/pytorch_model.bin'
-
-seed_everything(params_dict['seed'])
+seed = params_dict['seed']
+seed_everything(seed)
 
 # Load the dataset based on the value of args.use_original_data
 dataset_raw = DataSetLoader(train_data_path=train_data_permutated_path, test_data_path=test_data_path) if not params_dict['use_original_data'] else DataSetLoader(
@@ -66,8 +66,8 @@ tokenizer = tokenizer_ = narrationdataset.tokenizer_
 
 device = torch.device( 'cuda') if torch.cuda.is_available() else torch.device('cpu')
 # Build model
-performance_narration_model = get_model(
-    narrationdataset, model_type=params_dict['modeltype'])()
+performance_narration_model = get_model(narrationdataset,
+                                        model_type=params_dict['modeltype'])()
 
 # Load the weights
 state_dict = torch.load(best_check_point_model)
@@ -75,13 +75,18 @@ performance_narration_model.load_state_dict(state_dict)
 
 print('Model loaded')
 
-narrator = PerformanceNarrator(performance_narration_model,narrationdataset,device,sampling=False,verbose=False)
+classifcation_report = ClassificationReportPreprocessor(['Low Quality','High Quality'],True)
+
+narrator = PerformanceNarrator(performance_narration_model,narrationdataset,device,classificationReportProcessor=None,sampling=False,verbose=False)
+
+#prediction_report = {'F1-score':["20.56%","LOW"],'Accuracy':["40.16%","LOW"],'AUC':["70.16%","LOW"]}
+#print(classifcation_report(prediction_report))
+#print(narrator.singleNarrationGeneration(prediction_report,seed))
+#exit()
+#example = dataset_raw.test_data[99]
 
 
-example = dataset_raw.test_data[99]
-seed = params_dict['seed']
-
-narratives = narrator.multipleNarrationGeneration(dataset_raw.test_data[:4], seed,  max_length=190,
+narratives = narrator.multipleNarrationGeneration(dataset_raw.test_data[:], seed,  max_length=190,
                           length_penalty=8.6, beam_size=10,
                           repetition_penalty= 1.5,
                            return_top_beams=4)
