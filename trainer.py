@@ -8,8 +8,10 @@ from src.datasethandler import DataSetLoader, NarrationDataSet, train_data_origi
 #from composer import *
 from src.trainer_utils import (CustomTrainerFusion, get_model,
                                getTrainingArguments, EarlyStoppingCallback)
+
 os.environ["WANDB_DISABLED"] = "true"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 parser = argparse.ArgumentParser(
     description='Arguments for Performance Narration Models.')
 parser.add_argument('--run_id', '-run_id', type=str, default='')
@@ -130,7 +132,6 @@ results = trainer.evaluate()
 
 # get the best checkpoint
 best_check_point = trainer.state.best_model_checkpoint
-
 
 
 #

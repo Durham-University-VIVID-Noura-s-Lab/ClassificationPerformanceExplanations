@@ -3,9 +3,38 @@ import random
 
 from attr import dataclass
 import torch
+from transformers import BartTokenizer, T5Tokenizer
 
-from data_utils import cleanRatingPreamble, getClassLabels, processInputTableAndNarrations, identicals
-from src.model_utils import setupTokenizer
+from data_utils import cleanRatingPreamble, getClassLabels, processInputTableAndNarrations, identicals,classes_tokens
+
+
+def setupTokenizer(modelbase):
+    if 't5' in modelbase:
+        tokenizer_ = T5Tokenizer.from_pretrained(modelbase)
+    elif 'bart' in modelbase:
+        tokenizer_ = BartTokenizer.from_pretrained(modelbase)
+    classification_metrics = ['F1-Score',
+                              'F2-Score', 'F1-score', 'F2-score', 'F1score', 'F2score', 'G-Mean']
+    rates_vocabulary = rates_vocabulary = [
+        'VALUE_HIGH', 'VALUE_MODERATE', 'VALUE_LOW']  # ['HIGH','MODERATE','LOW']
+    # classification_metrics +
+    # ,'<acc_diff>',
+    additional_vocab = rates_vocabulary + classes_tokens+['also_known_as', 'ml_task','is_imbalanced','is_balanced','data_dist', '<|IMBALANCED|>', '<|BALANCED|>', 'class_labels', 'metric_value', 'metric_rate', 'dataset_attributes', '<|majority_dist|>',
+                                                          '<|minority_dist|>', '<rec_diff>', '<preci_diff>', '<acc_diff>']+classification_metrics
+    if 't5' in modelbase:
+        special_tokens = ['<|>', '&&', '<TaskDec>',
+                          '<MetricsInfo>', '<|table2text|>']
+        tokenizer_.add_special_tokens({'sep_token': '<|section-sep|>',
+                                       'additional_special_tokens': special_tokens})
+    elif 'bart' in modelbase:
+        special_tokens = ['<|>', '&&', '<TaskDec>',
+                          '<MetricsInfo>', '<|table2text|>', '<|section-sep|>']
+        tokenizer_.add_special_tokens(
+            {'additional_special_tokens': special_tokens})
+
+    tokenizer_.add_tokens(additional_vocab)
+    return tokenizer_
+
 
 # Change these to match the location of your dataset
 train_data_permutated_path = "dataset/train_data_permutated.json"

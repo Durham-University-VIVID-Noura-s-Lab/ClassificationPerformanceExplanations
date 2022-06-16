@@ -1,53 +1,8 @@
-import datetime
-import functools
+
 import math
-import os
-import re
-
-import nltk
 import torch
-from transformers import BartTokenizer, T5Tokenizer
+import torch.nn as nn
 from torch.nn import functional as F
-#from .data_utils import getClassLabels
-
-nn = torch.nn
-def getClassLabels(nb_classes):
-    # The class label token is represented as #C{chr(i+97).upper()}
-    classes = []
-    for i in range(nb_classes):
-        cl = '#C'+chr(i+97).upper()
-        classes.append(cl)
-    return classes
-classes_tokens = getClassLabels(7)
-
-
-def setupTokenizer(modelbase):
-    if 't5' in modelbase:
-        tokenizer_ = T5Tokenizer.from_pretrained(modelbase)
-    elif 'bart' in modelbase:
-        tokenizer_ = BartTokenizer.from_pretrained(modelbase)
-    classification_metrics = ['F1-Score',
-                              'F2-Score', 'F1-score', 'F2-score', 'F1score', 'F2score', 'G-Mean']
-    rates_vocabulary = rates_vocabulary = [
-        'VALUE_HIGH', 'VALUE_MODERATE', 'VALUE_LOW']  # ['HIGH','MODERATE','LOW']
-    # classification_metrics +
-    # ,'<acc_diff>',
-    additional_vocab = rates_vocabulary + classes_tokens+['also_known_as', 'ml_task','is_imbalanced','is_balanced','data_dist', '<|IMBALANCED|>', '<|BALANCED|>', 'class_labels', 'metric_value', 'metric_rate', 'dataset_attributes', '<|majority_dist|>',
-                                                          '<|minority_dist|>', '<rec_diff>', '<preci_diff>', '<acc_diff>']+classification_metrics
-    if 't5' in modelbase:
-        special_tokens = ['<|>', '&&', '<TaskDec>',
-                          '<MetricsInfo>', '<|table2text|>']
-        tokenizer_.add_special_tokens({'sep_token': '<|section-sep|>',
-                                       'additional_special_tokens': special_tokens})
-    elif 'bart' in modelbase:
-        special_tokens = ['<|>', '&&', '<TaskDec>',
-                          '<MetricsInfo>', '<|table2text|>', '<|section-sep|>']
-        tokenizer_.add_special_tokens(
-            {'additional_special_tokens': special_tokens})
-
-    tokenizer_.add_tokens(additional_vocab)
-    return tokenizer_
-
 
 class RelativeGlobalAttention(nn.Module):
     def __init__(self, d_model, num_heads, max_len=1024, dropout=0.1):

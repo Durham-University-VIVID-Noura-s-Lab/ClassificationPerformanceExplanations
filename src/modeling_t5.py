@@ -1050,7 +1050,7 @@ class T5NarrationModel(nn.Module):
                                  reduce_loss=True,
                                  )
         return outputs
-    
+
     def baselineTraining(self, batch):
         device = self.device
         preamble_tokens = batch['preamble_tokens'].to(device)
@@ -1059,16 +1059,15 @@ class T5NarrationModel(nn.Module):
 
         decoder_attention_mask = batch['labels_attention_mask'].to(device)
         return self.generator(input_ids=preamble_tokens,
-                                            attention_mask=preamble_attention_mask,
-                                            labels=labels,
-                                            decoder_attention_mask=decoder_attention_mask,
-                                            reduce_loss=True,
+                              attention_mask=preamble_attention_mask,
+                              labels=labels,
+                              decoder_attention_mask=decoder_attention_mask,
+                              reduce_loss=True,
 
-                                            )
+                              )
 
     def __init__(self, vocab_size, model_type, modelbase='t5-base', share_mpu_sa=False, device=torch.device(
             'cuda') if torch.cuda.is_available() else torch.device('cpu')):
-
 
         self.modelbase = modelbase
         self.vocab_size = vocab_size
@@ -1079,9 +1078,9 @@ class T5NarrationModel(nn.Module):
             output_hidden_states=False))
 
         super(T5NarrationModel, self).__init__()
-        
+
         self.t5config.share_mpu_sa = self.share_mpu_sa
-        self.model_type= model_type
+        self.model_type = model_type
         if self.model_type in ['baseline', 'base', ]:
             self.t5config.modeltype = model_type
             self.buildBaseline()
@@ -1090,6 +1089,6 @@ class T5NarrationModel(nn.Module):
             self.buildFusionModels()
 
     def forward(self, batch):
-        if self.model_type not in ['base','baseline']: 
+        if self.model_type not in ['base', 'baseline']:
             return self.FusionModelsTraining(batch)
         return self.baselineTraining(batch)

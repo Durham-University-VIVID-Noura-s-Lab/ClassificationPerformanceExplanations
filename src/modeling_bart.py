@@ -7,11 +7,12 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 from torch.nn import functional as F
-from transformers import BartConfig, BartPretrainedModel, BartForConditionalGeneration
+from transformers import (BartConfig, BartForConditionalGeneration,
+                          BartPretrainedModel)
 from transformers.models.bart.modeling_bart import (
     ACT2FN, BartAttention, BartDecoder, BartEncoderLayer,
-    BartLearnedPositionalEmbedding, BaseModelOutput,
-    Seq2SeqLMOutput, Seq2SeqModelOutput, shift_tokens_right)
+    BartLearnedPositionalEmbedding, BaseModelOutput, Seq2SeqLMOutput,
+    Seq2SeqModelOutput, shift_tokens_right)
 
 from model_utils import RelativeGlobalAttention
 from src.SelfAttentionBasedTableEncoder import CollapsedMetricsTableEncoderBart

@@ -45,6 +45,8 @@ def format_time(elapsed):
     return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
 
+
+
 def getClassLabels(nb_classes):
     # The class label token is represented as #C{chr(i+97).upper()}
     classes = []
@@ -52,6 +54,10 @@ def getClassLabels(nb_classes):
         cl = '#C'+chr(i+97).upper()
         classes.append(cl)
     return classes
+classes_tokens = getClassLabels(7)
+
+
+
 
 
 def processMetricsInformationDict(metric_scores, metric_rates, augment=False, reverse_only=False, identicals={}, nb_metrics=6):
