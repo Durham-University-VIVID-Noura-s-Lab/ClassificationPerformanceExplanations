@@ -8,6 +8,11 @@ from transformers import BartTokenizer, T5Tokenizer
 from data_utils import cleanRatingPreamble, getClassLabels, processInputTableAndNarrations, identicals,classes_tokens
 
 
+# Change these to match the location of your dataset
+train_data_permutated_path = "dataset/train_data_permutated.json"
+train_data_original_path = "dataset/train_data_original.json"
+test_data_path = 'dataset/test set.json'
+
 def setupTokenizer(modelbase):
     if 't5' in modelbase:
         tokenizer_ = T5Tokenizer.from_pretrained(modelbase)
@@ -36,10 +41,6 @@ def setupTokenizer(modelbase):
     return tokenizer_
 
 
-# Change these to match the location of your dataset
-train_data_permutated_path = "dataset/train_data_permutated.json"
-train_data_original_path = "dataset/train_data_original.json"
-test_data_path = 'dataset/test set.json'
 
 
 class DataSetLoader(object):
