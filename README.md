@@ -14,3 +14,4 @@ these can be installed by running the code  ``pip install -r requirement.txt``
 # The project
 The models trained in this work are based on the T5 and BART pre-trained language models provided by huggingface. The variants of these models  supported are T5-small/base/large and BART-base/large.  
 - The file ``trainer.py`` contains the source code for training the models to generate the textual narratives. The trained models as well as other outputs generated will be saved in the folder provided via the argument ``--output_dir``. 
+ 
