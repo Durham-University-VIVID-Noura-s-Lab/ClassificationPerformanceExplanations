@@ -27,8 +27,29 @@ The models trained in this work are based on the T5 and BART pre-trained languag
 - The file ``classification_performance_description_inference.py `` contains the code for generating the textual narratives for a given report.
 
 To train a model run the code:
-``
+
+For simplicity, the locations for the training and testing datasets have been hard coded in the trainer.py file. Modify them to reflect the appropriate locations.
+
+```
 python trainer.py -run_id [any random id to identify the execution instance] \  
-                  --modeltype [baseline | earlyfusion]  \\ <br>
-                  --modelbase [t5-small | t5-base  \\ <br>
-``
+                  --modeltype [baseline | earlyfusion]  \
+                  --modelbase [t5-small | t5-base | t5-large | facebook/bart-base | facebook/bart-large] \ 
+                  --num_train_epochs 20 \
+                  --learning_rate 3e-4 \
+                  --output_dir [location for saving all the train model's configurations and files] \
+```
+
+Asumming the ``--output_dir`` is specified as ``narrative_models``, ``--modeltype`` as ``earlyfusion``, and ``--modelbase`` as  ``facebook/bart-base``, the structure of the ``--output_dir`` will be:
+```
+narrative_models
+        /trainednarrators
+           /earlyfusion
+              /bart-base/
+        
+```
+The files after training a model saved are:
+```
+parameters.json
+pytorch_model.bin
+```
+
