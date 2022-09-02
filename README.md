@@ -26,7 +26,7 @@ The models trained in this work are based on the T5 and BART pre-trained languag
 
 - The file ``classification_performance_description_inference.py `` contains the code for generating the textual narratives for a given report.
 
-To train a model run the code:
+To train a model and evaluate it run the code:
 
 For simplicity, the locations for the training and testing datasets have been hard coded in the trainer.py file. Modify them to reflect the appropriate locations.
 
@@ -53,3 +53,33 @@ parameters.json
 pytorch_model.bin
 ```
 
+Sample of the inference routine is as follows:
+
+```
+from classification_performance_description_inference import ClassificationPerformanceNarration
+narrator = ClassificationPerformanceNarration(model_base = "facebook/bart-base"
+                                              model_base_dir= "narrative_models/trainednarrators/earlyfusion/bart-base/"
+                                              class_labels = ['Low','High']
+                                              is_balance=True
+                                              modeltype='earlyfusion'
+                                              max_preamble_len=160
+                                              max_len_trg=185
+                                              length_penalty=8.6
+                                              beam_size=10
+                                              epetition_penalty=1.5
+                                              return_top_beams=1,
+                                              random_state=453,
+                                              )
+                                              
+# Set up the inference model
+narrator.buildModel()
+
+# The setup is ready to be used
+
+# Sample of the expected format for the performance report
+performance_report = {'F1-score':["20.56%","LOW"],'Accuracy':["40.16%","LOW"],'AUC':["70.16%","LOW"]}
+generatedTexts = narrator.generateTextualExplanation(performance_report)
+
+
+
+```
