@@ -78,6 +78,10 @@ train_arguments['output_dir'] = output_path
 
 # Save the arguments for later (when inference is performed)
 
+# Please change these to reflect where your training and test sets are located
+train_data_permutated_path = "dataset/train_data_permutated.json"
+train_data_original_path = "dataset/train_data_original.json"
+test_data_path = 'dataset/test set.json'
 
 # Load the dataset based on the value of args.use_original_data
 dataset = DataSetLoader(train_data_path=train_data_permutated_path, test_data_path=test_data_path) if not args.use_original_data else DataSetLoader(
