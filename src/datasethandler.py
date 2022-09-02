@@ -68,10 +68,12 @@ class RDFDataSetForTableStructured(torch.utils.data.Dataset):
                  max_val_toks=8,
                  max_rate_toks=8,
                  nb_classes=8,
+                 is_inference=False,
                  lower_narrations=False,
                  process_target=False,
                  use_raw=False):
         super().__init__()
+        self.is_inference = is_inference
         self.modelbase = modelbase
         self.nb_metrics = nb_metrics
         self.tokenizer = tokenizer
@@ -127,7 +129,7 @@ class RDFDataSetForTableStructured(torch.utils.data.Dataset):
                                                      return_tensors='pt')
 
     def __len__(self,):
-        return len(self.data_pack)
+        return len(self.data_pack) if not self.is_inference else return 1
 
     def processTableInfo(self, data_row):
         data_di = data_row['dataset_attribute']
@@ -236,6 +238,19 @@ class NarrationDataSet:
         self.max_rate_toks = max_rate_toks
         self.lower_narrations = lower_narrations
         self.process_target = process_target
+    
+    def build_default(self,):
+        
+        # Build the dataset framework for inference purposes
+        self.base_dataset = RDFDataSetForTableStructured(self.tokenizer_,
+                                                         [],
+                                                         self.modelbase, max_preamble_len=self.max_preamble_len,
+                                                         max_len_trg=self.max_len_trg,
+                                                         max_rate_toks=self.max_rate_toks,
+                                                         lower_narrations=self.lower_narrations,
+                                                         process_target=self.process_target,
+                                                         is_inference=True,
+                                                         use_raw=False)
 
     def dataset_fit(self, dataset):
         self.base_dataset = RDFDataSetForTableStructured(self.tokenizer_,
