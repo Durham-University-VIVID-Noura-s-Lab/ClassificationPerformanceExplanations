@@ -1,19 +1,19 @@
 import argparse
-from ast import arg
 import json
 import os
 import pickle as pk
 import time
+from ast import arg
 from re import S
+
 import torch
-
 from pytorch_lightning import seed_everything
-from torch.nn import functional as F
 from sklearn.utils import check_random_state
-from src.datasethandler import ClassificationReportPreprocessor,  NarrationDataSet
-from src.inferenceUtils import PerformanceNarrator
-from src.trainer_utils import get_model
+from torch.nn import functional as F
 
+from datasethandler import ClassificationReportPreprocessor, NarrationDataSet
+from inferenceUtils import PerformanceNarrator
+from trainer_utils import get_model
 
 # Disable WANDB
 os.environ["WANDB_DISABLED"] = "true"
