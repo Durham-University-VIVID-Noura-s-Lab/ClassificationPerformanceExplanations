@@ -19,8 +19,7 @@ class PerformanceNarrator:
                  verbose=False) -> None:
         self.model = model.to(device)
         self.experiments_dataset = experiments_dataset
-        self.vectorizer = vectorizer = lambda x: experiments_dataset.transform(
-            x)
+        self.vectorizer = vectorizer = lambda x: experiments_dataset.transform(x)
         self.max_iter = max_iter
         self.sampling = sampling
         self.verbose = verbose
@@ -43,7 +42,9 @@ class PerformanceNarrator:
     def singleNarrationGeneration(self, prediction_summary, seed,  max_length=190,
                                   length_penalty=8.6, beam_size=10,
                                   repetition_penalty=1.5,
-                                  return_top_beams=4):
+                                  return_top_beams=4,
+                                  verbose=False,
+                                  ):
         """
         Generates the Performance Narratives by first preprocessing the performance summary report then calling the 
         __generateNarration(args) function
@@ -51,6 +52,7 @@ class PerformanceNarrator:
         if self.classificationReportProcessor:
             example, placeholder_map = self.classificationReportProcessor(
             prediction_summary)
+            #print(example)
             narrative = self.generateNarration(example, seed,  max_length,
                                                 length_penalty, beam_size,
                                                 repetition_penalty,

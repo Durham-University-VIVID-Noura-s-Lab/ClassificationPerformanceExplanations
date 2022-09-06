@@ -130,7 +130,7 @@ class RDFDataSetForTableStructured(torch.utils.data.Dataset):
                                                      return_tensors='pt')
 
     def __len__(self,):
-        return len(self.data_pack) if not self.is_inference else return 1
+        return len(self.data_pack) if not self.is_inference else  1
 
     def processTableInfo(self, data_row):
         data_di = data_row['dataset_attribute']
@@ -344,16 +344,19 @@ class ClassificationReportPreprocessor(object):
 
     def __init__(self, classes, is_balance):
         super().__init__()
+        #print(is_balance)
         assert len(classes) > 1, "The number of classes should be greater than 1"
         self.classes = classes
+
+        self.is_balanced =True
 
         self.class_labels_placeholders = getClassLabels(len(self.classes))
         self.class_maps = {p: c for p, c in zip(
             self.class_labels_placeholders, classes)}
         classes_string = ', '.join(
             self.class_labels_placeholders[:-1])+' and '+self.class_labels_placeholders[-1]
-        is_balance = "is_balanced" if is_balance else "is_imbalanced"
-        self.task_section = f"<|section-sep|> <TaskDec> ml_task | data_dist | {is_balance} && ml_task | class_labels | {classes_string}  <|section-sep|> <|table2text|> "
+        is_balance_str = "is_balanced" if is_balance else "is_imbalanced"
+        self.task_section = f"<|section-sep|> <TaskDec> ml_task | data_dist | {is_balance_str} && ml_task | class_labels | {classes_string}  <|section-sep|> <|table2text|> "
 
-        self.task_dictionary = {'dataset_attribute': [is_balance],
+        self.task_dictionary = {'dataset_attribute': [is_balance_str],
                                 'classes': self.class_labels_placeholders}
