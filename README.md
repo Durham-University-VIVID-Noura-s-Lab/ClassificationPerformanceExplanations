@@ -57,16 +57,19 @@ Sample of the inference routine is as follows:
 
 ```
 from classification_performance_description_inference import ClassificationPerformanceNarration
-narrator = ClassificationPerformanceNarration(model_base = "facebook/bart-base"
-                                              model_base_dir= "narrative_models/trainednarrators/earlyfusion/bart-base/"
-                                              class_labels = ['Low','High']
-                                              is_balance=True
-                                              modeltype='earlyfusion'
-                                              max_preamble_len=160
-                                              max_len_trg=185
-                                              length_penalty=8.6
-                                              beam_size=10
-                                              epetition_penalty=1.5
+
+trained_model_path = "Trained_models/trainednarrators/baseline/bart-base/"
+narrator = ClassificationPerformanceNarration(model_base = "facebook/bart-base",
+                                              model_base_dir= trained_model_path,
+                                              class_labels = ['Low',
+                                                              'High'],
+                                              is_balance=True,
+                                              modeltype='baseline',
+                                              max_preamble_len=160,
+                                              max_len_trg=185,
+                                              length_penalty=8.6,
+                                              beam_size=10,
+                                              repetition_penalty=1.5,
                                               return_top_beams=1,
                                               random_state=453,
                                               )
@@ -83,3 +86,6 @@ generatedTexts = narrator.generateTextualExplanation(performance_report)
 
 
 ```
+
+
+See the ``performance_narration.ipynb`` for the full code.
