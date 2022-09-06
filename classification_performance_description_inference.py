@@ -21,9 +21,9 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 class ClassificationPerformanceNarration:
-    def __init__(self, model_base, model_base_dir,
-                 class_labels,
-                 is_balance=True,
+    def __init__(self, model_base,
+                 model_base_dir,
+                 
                  modeltype='earlyfusion',
                  max_preamble_len=160,
                  max_len_trg=185,
@@ -40,8 +40,7 @@ class ClassificationPerformanceNarration:
             model_base: the type of pre-trained language model (any of the following is accepted:  t5-small, t5-base, t5-large, Bart-base,      and Bart-large
             model_base_dir: the path or location of the trained model or where the trained model and its configurations were saved.
             modeltype: "baseline" or "earlyfusion" . see the article for the difference between the two types supported
-            class_labels:  names of the classes that the ML model was trained to predict
-            is_balance: if the ML model was trained on a balance or imbalance dataset. default is True
+            
             max_preamble_len: the number of input tokens passed to the neural generator
             max_len_trg: the number of output tokens returned neural generator
 
@@ -58,12 +57,7 @@ class ClassificationPerformanceNarration:
         self.model_base_dir = model_base_dir
         self.modeltype = modeltype
 
-        # names of the classes that the ML model was trained to predict
-        self.class_labels = class_labels
-
-        # if the ML model was trained on a balance or imbalance dataset
-        self.is_balance = is_balance
-
+       
         self.repetition_penalty = repetition_penalty
         self.length_penalty = length_penalty
         self.beam_size = beam_size
@@ -109,29 +103,33 @@ class ClassificationPerformanceNarration:
         performance_narration_model.load_state_dict(state_dict)
 
         # This object is for processing the performance metrics provided in the  json format
-        classification_report_preprocessor = ClassificationReportPreprocessor(
-            self.class_labels, self.is_balance)
+        #classification_report_preprocessor = ClassificationReportPreprocessor(self.class_labels, self.is_balance)
 
         self.narrator = PerformanceNarrator(performance_narration_model,
                                             narrationdataset,
                                             device,
-                                            classificationReportProcessor=classification_report_preprocessor,
+                                            classificationReportProcessor=None,
                                             sampling=enable_sampling_inference,
                                             verbose=verbose)
 
         self.setup_performed = True
 
-    def generateTextualExplanation(self, prediction_report, is_balance=True):
+    def generateTextualExplanation(self, prediction_report, class_labels,
+                                   is_balance=True,):
         # sample of the prediction_report is {'F1-score':["20.56%","LOW"],'Accuracy':["40.16%","LOW"],'AUC':["70.16%","LOW"]}
         assert self.setup_performed, "Run the function/method ``buildModel`` before calling this method"
         assert type(prediction_report) is dict, '''The prediction report format is invalid. It should be a dictionary such as 
                                                     {'Metric_1':["Metric_1_score_value","Metric_1_score_rate"],'Metric_2':["Metric_2_score_value","Metric_2_score_rate"],...,'Metric_n':["Metric_n_score_value","Metric_n_score_rate"]} 
                                                     example is: {'F1-score':["20.56%","LOW"],'Accuracy':["40.16%","LOW"],'AUC':["70.16%","LOW"]}
                                                     '''
+
+        if class_labels is None:
+            class_labels = self.class_labels
+
         # This object is for processing the performance metrics provided in the  json format
         classification_report_preprocessor = ClassificationReportPreprocessor(
-            self.class_labels, is_balance)
-        self.narrator.classificationReportProcessor=classification_report_preprocessor
+            class_labels, is_balance)
+        self.narrator.classificationReportProcessor = classification_report_preprocessor
         generatedTexts = self.narrator.singleNarrationGeneration(prediction_report,
                                                                  self.seed,
                                                                  max_length=self.max_len_trg,

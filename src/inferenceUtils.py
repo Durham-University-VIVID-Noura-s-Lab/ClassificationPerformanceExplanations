@@ -53,6 +53,7 @@ class PerformanceNarrator:
             example, placeholder_map = self.classificationReportProcessor(
             prediction_summary)
             #print(example)
+            #print(placeholder_map)
             narrative = self.generateNarration(example, seed,  max_length,
                                                 length_penalty, beam_size,
                                                 repetition_penalty,

@@ -4,6 +4,7 @@ import json
 import os
 import random
 import re
+
 import nltk
 import numpy as np
 import pandas as pd
@@ -18,7 +19,7 @@ of the model given that evaluation metrics and their corresponding scores are: <
                       '''
                     Describe the overall performance of the model trained to predict <class_string> on this <dataset> dataset. The evaluation metrics score were <metric_string> as shown in the table: 
                     ''']
-import sacrebleu
+
 def normalize_text(s):
   # pylint: disable=unnecessary-lambda
   tokenize_fn = lambda x: sacrebleu.tokenizers.Tokenizer13a()(x)

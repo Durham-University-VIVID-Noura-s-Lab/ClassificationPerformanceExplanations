@@ -319,9 +319,9 @@ class ClassificationReportPreprocessor(object):
             m_list.append(m.replace('-', '').replace('_', '').lower())
             v_list.append(score)
             r_list.append(rate)
-            if mx.lower() in identicals.keys():
+            if mx.lower() in self.identicals.keys():
                 metric_string += ' && ' + \
-                    f'{m.lower()} | also_known_as | {identicals[metric_name]}'
+                    f'{m.lower()} | also_known_as | {self.identicals[metric_name.lower()]}'
             report.append(metric_string)
 
         # Get different narrative preamble
@@ -342,16 +342,19 @@ class ClassificationReportPreprocessor(object):
 
         return output, metric_maps
 
-    def __init__(self, classes, is_balance):
+    def __init__(self, classes, is_balance,
+    identicals = {'sensitivity': 'recall',
+     'true positive rate': 'recall'}):
         super().__init__()
         #print(is_balance)
         assert len(classes) > 1, "The number of classes should be greater than 1"
         self.classes = classes
 
         self.is_balanced =True
+        self.identicals = identicals
 
         self.class_labels_placeholders = getClassLabels(len(self.classes))
-        self.class_maps = {p: c for p, c in zip(
+        self.class_maps = {p: f'"{c}"' for p, c in zip(
             self.class_labels_placeholders, classes)}
         classes_string = ', '.join(
             self.class_labels_placeholders[:-1])+' and '+self.class_labels_placeholders[-1]
@@ -360,3 +363,7 @@ class ClassificationReportPreprocessor(object):
 
         self.task_dictionary = {'dataset_attribute': [is_balance_str],
                                 'classes': self.class_labels_placeholders}
+
+
+
+

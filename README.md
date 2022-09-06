@@ -52,19 +52,23 @@ The files after training a model saved are:
 parameters.json
 pytorch_model.bin
 ```
+* See the ``builder.ipynb`` for an example of the training routine
+
 
 Sample of the inference routine is as follows:
+* See the ``performance_narration.ipynb`` for the full code.
 
 ```
 from classification_performance_description_inference import ClassificationPerformanceNarration
 
-trained_model_path = "Trained_models/trainednarrators/baseline/bart-base/"
+trained_model_path = 'TrainModels/earlyfusion/bart-base/'
+#"Trained_models/trainednarrators/baseline/bart-base/"
+
+modeltype='earlyfusion'
 narrator = ClassificationPerformanceNarration(model_base = "facebook/bart-base",
                                               model_base_dir= trained_model_path,
-                                              class_labels = ['Low',
-                                                              'High'],
-                                              is_balance=True,
-                                              modeltype='baseline',
+                                              
+                                              modeltype=modeltype,
                                               max_preamble_len=160,
                                               max_len_trg=185,
                                               length_penalty=8.6,
@@ -80,12 +84,25 @@ narrator.buildModel()
 # The setup is ready to be used
 
 # Sample of the expected format for the performance report
-performance_report = {'F1-score':["20.56%","LOW"],'Accuracy':["40.16%","LOW"],'AUC':["70.16%","LOW"]}
-generatedTexts = narrator.generateTextualExplanation(performance_report)
+performance_report = {'Recall': ["19.56%", "LOW"],
+                      'F1-score': ["9.06%",
+                                   "LOW"],
+                      'Accuracy': ["68.16%", "LOW"],
+                      'AUC': ["50.16%", "MODERATE"]
+                      }
+class_labels = ['Not Fraud', 'Fraud']
+is_balance = False
+generatedTexts = narrator.generateTextualExplanation(performance_report,
+                                                       class_labels,
+                                                     is_balance=True)
 
 
-
+print(generatedTexts)
 ```
 
 
-See the ``performance_narration.ipynb`` for the full code.
+
+
+
+
+
