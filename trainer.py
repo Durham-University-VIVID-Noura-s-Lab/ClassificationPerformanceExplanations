@@ -7,7 +7,8 @@ from torch.nn import functional as F
 from src.datasethandler import DataSetLoader, NarrationDataSet, train_data_original_path, train_data_permutated_path, test_data_path
 #from composer import *
 from src.trainer_utils import (CustomTrainerFusion, get_model,
-                               getTrainingArguments, EarlyStoppingCallback)
+                               getTrainingArguments)
+from transformers import TrainingArguments, Trainer, EarlyStoppingCallback,T5Config
 
 os.environ["WANDB_DISABLED"] = "true"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
